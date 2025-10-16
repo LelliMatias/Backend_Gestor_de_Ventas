@@ -20,5 +20,6 @@ import { MarcasModule } from '../marcas/marcas.module'; // ¡Importante!
       useClass: LineaRepository,
     },
   ],
+  exports: [LineasService]
 })
 export class LineasModule { }
