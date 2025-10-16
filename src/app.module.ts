@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MarcasModule } from './marcas/marcas.module';
+import { LineasModule } from './lineas/lineas.module';
 
 @Module({
   imports: [
@@ -21,10 +22,11 @@ import { MarcasModule } from './marcas/marcas.module';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // Cambiado a true para desarrollo
+        synchronize: true,
       }),
     }),
     MarcasModule,
+    LineasModule,
   ],
   controllers: [AppController],
   providers: [AppService],

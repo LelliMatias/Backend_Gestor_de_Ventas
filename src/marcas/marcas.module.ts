@@ -18,5 +18,6 @@ import { MarcaRepository } from './repositories/marca.repository';
       useClass: MarcaRepository,
     },
   ],
+  exports: [MarcasService],
 })
 export class MarcasModule { }
