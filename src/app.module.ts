@@ -4,12 +4,10 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MarcasModule } from './marcas/marcas.module';
-<<<<<<< HEAD
 import { LineasModule } from './lineas/lineas.module';
 import { ProductosModule } from './productos/productos.module';
-=======
 import { UsuarioModule } from './usuario/usuario.module';
->>>>>>> bb264b9 (feature: CRUD Usuario)
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -31,12 +29,10 @@ import { UsuarioModule } from './usuario/usuario.module';
       }),
     }),
     MarcasModule,
-<<<<<<< HEAD
     LineasModule,
     ProductosModule,
-=======
+    AuthModule,
     UsuarioModule,
->>>>>>> bb264b9 (feature: CRUD Usuario)
   ],
   controllers: [AppController],
   providers: [AppService],

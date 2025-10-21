@@ -21,6 +21,10 @@ export class UsuarioRepository implements IUsuarioRepository {
         return this.typeormRepository.findOneBy({ id });
     }
 
+    findOneByEmail(email: string): Promise<Usuario | null> {
+        return this.typeormRepository.findOneBy({ email });
+    }
+
     async create(createDto: CreateUsuarioDto): Promise<Usuario> {
         const nuevoUsuario = this.typeormRepository.create(createDto);
         return this.typeormRepository.save(nuevoUsuario);

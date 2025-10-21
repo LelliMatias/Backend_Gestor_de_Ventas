@@ -10,15 +10,21 @@ export class Usuario {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ unique: true, nullable: false})
     nombre: string;
 
-    @Column()
+    @Column( {nullable: false })
     contraseña: string;
 
+    @Column({nullable: false, unique: true})
+    email: string;
+    
+
     @Column({
-        type: "enum",
-        enum: RolUsuario
+        type: 'enum',
+        enum: RolUsuario,
+        default: RolUsuario.VENDEDOR
     })
+
     rol: RolUsuario;
 }

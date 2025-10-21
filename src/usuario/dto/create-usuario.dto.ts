@@ -11,7 +11,11 @@ export class CreateUsuarioDto {
     @MinLength(5, { message: 'La contraseña debe tener al menos 5 caracteres' })
     contraseña: string;
 
-    @IsEnum(RolUsuario)
+    @IsEnum(RolUsuario) // Por default debe ser VENDEDOR (solucionar)
     @IsNotEmpty()
     rol: RolUsuario;
+
+    @IsString()
+    @IsNotEmpty()
+    email: string;
 }

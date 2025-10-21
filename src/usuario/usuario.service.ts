@@ -1,5 +1,5 @@
 // usuario.service.ts
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Inject } from '@nestjs/common';
@@ -15,17 +15,13 @@ export class UsuarioService {
   ) {}
 
   async create(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
-    // <-- BUENA PRÁCTICA: Lógica de negocio antes de la creación.
-    // 1. Hashear la contraseña.
-    const hashedPassword = await bcrypt.hash(createUsuarioDto.contraseña, 10);
+    const hashedPassword = await bcrypt.hash(createUsuarioDto.contraseña, 10); // hasheo contraseña
 
-    // 2. Preparar la nueva entidad con la contraseña hasheada.
     const nuevoUsuario = {
       ...createUsuarioDto,
       contraseña: hashedPassword,
     };
     
-    // 3. Pasar la entidad preparada al repositorio.
     return this.usuarioRepository.create(nuevoUsuario);
   }
 
@@ -41,20 +37,20 @@ export class UsuarioService {
     return usuario;
   }
 
+  async findOneByEmail(email: string): Promise<Usuario | null> {
+    return await this.usuarioRepository.findOneByEmail(email);
+  }
+  
+
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto): Promise<Usuario> {
-    // <-- PRINCIPIO SRP: El servicio orquesta la actualización.
-    // 1. Busca la entidad. findOne ya se encarga de lanzar el error 404 si no existe.
     const usuarioToUpdate = await this.findOne(id);
 
-    // 2. Si se está actualizando la contraseña, la hasheamos.
     if (updateUsuarioDto.contraseña) {
       updateUsuarioDto.contraseña = await bcrypt.hash(updateUsuarioDto.contraseña, 10);
     }
     
-    // 3. Fusionamos los datos del DTO (ya procesados) en la entidad.
     Object.assign(usuarioToUpdate, updateUsuarioDto);
     
-    // 4. Le pasamos la entidad COMPLETA al repositorio para que la guarde.
     return this.usuarioRepository.save(usuarioToUpdate);
   }
 

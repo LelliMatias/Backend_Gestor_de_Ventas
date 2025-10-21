@@ -7,4 +7,5 @@ export interface IUsuarioRepository {
     create(createDto: CreateUsuarioDto): Promise<Usuario>;
     save(usuario: Usuario): Promise<Usuario>; //Usamos save debido a que hasheamos la contraseña y usamos el ORM, mas seguro en este caso
     delete(id: number): Promise<void>;
+    findOneByEmail(email: string): Promise<Usuario | null>;
 }
