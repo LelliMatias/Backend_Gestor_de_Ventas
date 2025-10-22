@@ -8,6 +8,8 @@ import { LineasModule } from './lineas/lineas.module';
 import { ProductosModule } from './productos/productos.module';
 import { UsuarioModule } from './usuario/usuario.module';
 import { AuthModule } from './auth/auth.module';
+import { VentaModule } from './venta/venta.module';
+import { DetalleVentaModule } from './detalle_venta/detalle_venta.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { AuthModule } from './auth/auth.module';
     ProductosModule,
     AuthModule,
     UsuarioModule,
+    VentaModule,
+    DetalleVentaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

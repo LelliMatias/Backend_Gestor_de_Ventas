@@ -18,7 +18,7 @@ export class UsuarioRepository implements IUsuarioRepository {
     }
 
     findById(id: number): Promise<Usuario | null> {
-        return this.typeormRepository.findOneBy({ id });
+        return this.typeormRepository.findOneBy({ id_usuario: id });
     }
 
     findOneByEmail(email: string): Promise<Usuario | null> {

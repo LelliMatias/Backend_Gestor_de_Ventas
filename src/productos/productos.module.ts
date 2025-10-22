@@ -22,5 +22,9 @@ import { LineasModule } from '../lineas/lineas.module';
       useClass: ProductoRepository,
     },
   ],
+  exports: [
+    'IProductoRepository',
+    ProductosService,
+  ]
 })
 export class ProductosModule { }

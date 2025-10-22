@@ -1,14 +1,15 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Venta } from "../../venta/entities/venta.entity";
 
 export enum RolUsuario {
     ADMIN = "ADMIN",
     VENDEDOR = "VENDEDOR"
 }
 
-@Entity()
+@Entity({name: 'Usuarios'})
 export class Usuario {
     @PrimaryGeneratedColumn()
-    id: number;
+    id_usuario: number;
 
     @Column({ unique: true, nullable: false})
     nombre: string;
@@ -27,4 +28,15 @@ export class Usuario {
     })
 
     rol: RolUsuario;
+
+
+    @OneToMany(() => Venta, (venta) => venta.usuario)
+    ventas: Venta[];
+
+    @DeleteDateColumn({
+        name: 'fecha_eliminacion',
+        type: 'timestamp',
+        nullable: true
+    })
+    fecha_eliminacion?: Date;
 }

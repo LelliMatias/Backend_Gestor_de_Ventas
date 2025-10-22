@@ -1,7 +1,8 @@
 // src/productos/entities/producto.entity.ts
 import { Linea } from '../../lineas/entities/linea.entity';
 import { Marca } from '../../marcas/entities/marca.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, DeleteDateColumn } from 'typeorm';
+import { DetalleVenta } from '../../detalle_venta/entities/detalle_venta.entity';
 
 @Entity({ name: 'Producto' })
 export class Producto {
@@ -31,4 +32,16 @@ export class Producto {
     @ManyToOne(() => Linea, { nullable: false, eager: true }) // eager deberia cargar la relacion de manera automatica
     @JoinColumn({ name: 'id_linea' })
     linea: Linea;
+
+
+    // Relacion con detalle_venta
+    @ManyToOne(() => DetalleVenta, (detalle_venta) => detalle_venta.producto)
+    detalles: DetalleVenta[];
+
+    @DeleteDateColumn({
+        name: 'fecha_eliminacion',
+        type: 'timestamp',
+        nullable: true
+    })
+    fecha_eliminacion?: Date;
 }
