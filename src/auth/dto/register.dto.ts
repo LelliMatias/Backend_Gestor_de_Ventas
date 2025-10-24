@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, IsEnum, IsNotEmpty } from "class-validator";
+import { IsEmail, IsString, MinLength, IsEnum, IsNotEmpty, IsOptional } from "class-validator";
 import { Transform } from "class-transformer";
 import { RolUsuario } from "../../usuario/entities/usuario.entity";
 
@@ -11,13 +11,13 @@ export class RegisterDto {
     @IsString()
     @IsEmail()
     email: string;
-    
+
     @Transform(({ value }) => value.trim())
     @IsString()
     @MinLength(6)
-    contraseña: string;  
-    
+    contraseña: string;
+
     @IsEnum(RolUsuario)
-    @IsNotEmpty()
-    rol: RolUsuario;
+    @IsOptional()
+    rol?: RolUsuario;
 }

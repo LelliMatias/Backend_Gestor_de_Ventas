@@ -1,8 +1,9 @@
 // src/productos/entities/producto.entity.ts
 import { Linea } from '../../lineas/entities/linea.entity';
 import { Marca } from '../../marcas/entities/marca.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, DeleteDateColumn, OneToMany } from 'typeorm';
 import { DetalleVenta } from '../../detalle_venta/entities/detalle_venta.entity';
+import { ProductoProveedor } from './producto-proveedor.entity';
 
 @Entity({ name: 'Producto' })
 export class Producto {
@@ -44,4 +45,7 @@ export class Producto {
         nullable: true
     })
     fecha_eliminacion?: Date;
+
+    @OneToMany(() => ProductoProveedor, (productoProveedor) => productoProveedor.producto)
+    productoProveedores: ProductoProveedor[];
 }

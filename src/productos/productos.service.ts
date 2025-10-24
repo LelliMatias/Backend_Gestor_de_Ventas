@@ -5,6 +5,11 @@ import { MarcasService } from '../marcas/marcas.service';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import type { IProductoRepository } from './interfaces/producto.repository.interface';
+import { ProductoProveedor } from './entities/producto-proveedor.entity';
+import { Repository } from 'typeorm';
+import { AddProveedorDto } from './dto/add-proveedor.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ProveedoresService } from 'src/proveedores/proveedores.service';
 
 @Injectable()
 export class ProductosService {
@@ -13,6 +18,9 @@ export class ProductosService {
     private readonly productoRepository: IProductoRepository,
     private readonly marcasService: MarcasService,
     private readonly lineasService: LineasService,
+    private readonly proveedoresService: ProveedoresService,
+    @InjectRepository(ProductoProveedor)
+    private readonly productoProveedorRepository: Repository<ProductoProveedor>
   ) { }
 
   async create(createProductoDto: CreateProductoDto) {
@@ -54,5 +62,23 @@ export class ProductosService {
   async remove(id: number) {
     await this.findOne(id);
     return this.productoRepository.delete(id);
+  }
+
+  async addProveedorToProducto(productoId: number, addProveedorDto: AddProveedorDto) {
+    // 1. Validar que el producto y el proveedor existan
+    // Asegúrate que tu servicio tenga un método `findOne` para productos
+    await this.productoRepository.findById(productoId);
+    await this.proveedoresService.findOne(addProveedorDto.proveedorId);
+
+    // 2. Crear la nueva relación
+    const nuevaRelacion = this.productoProveedorRepository.create({
+      productoId: productoId,
+      proveedorId: addProveedorDto.proveedorId,
+      codigoProveedor: addProveedorDto.codigoProveedor,
+      precioCompra: addProveedorDto.precioCompra,
+    });
+
+    // 3. Guardar la relación en la base de datos
+    return this.productoProveedorRepository.save(nuevaRelacion);
   }
 }

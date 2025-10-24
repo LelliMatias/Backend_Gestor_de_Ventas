@@ -6,20 +6,21 @@ export enum RolUsuario {
     VENDEDOR = "VENDEDOR"
 }
 
-@Entity({name: 'Usuarios'})
+@Entity({ name: 'Usuario' })
 export class Usuario {
     @PrimaryGeneratedColumn()
     id_usuario: number;
 
-    @Column({ unique: true, nullable: false})
+    @Column({ unique: true, nullable: false })
     nombre: string;
 
-    @Column( {nullable: false })
-    contraseña: string;
 
-    @Column({nullable: false, unique: true})
+    @Column({ nullable: false, unique: true })
     email: string;
-    
+
+
+    @Column({ nullable: false })
+    contraseña: string;
 
     @Column({
         type: 'enum',

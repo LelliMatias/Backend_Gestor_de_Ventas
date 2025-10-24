@@ -12,18 +12,13 @@ export class UsuarioService {
   constructor(
     @Inject('IUsuarioRepository')
     private readonly usuarioRepository: IUsuarioRepository,
-  ) {}
+  ) { }
 
   async create(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
-    const hashedPassword = await bcrypt.hash(createUsuarioDto.contraseña, 10); // hasheo contraseña
-
-    const nuevoUsuario = {
-      ...createUsuarioDto,
-      contraseña: hashedPassword,
-    };
-    
-    return this.usuarioRepository.create(nuevoUsuario);
+    const nuevoUsuario = this.usuarioRepository.create(createUsuarioDto);
+    return this.usuarioRepository.save(await nuevoUsuario);
   }
+
 
   findAll(): Promise<Usuario[]> {
     return this.usuarioRepository.findAll();
@@ -40,7 +35,7 @@ export class UsuarioService {
   async findOneByEmail(email: string): Promise<Usuario | null> {
     return await this.usuarioRepository.findOneByEmail(email);
   }
-  
+
 
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto): Promise<Usuario> {
     const usuarioToUpdate = await this.findOne(id);
@@ -48,9 +43,9 @@ export class UsuarioService {
     if (updateUsuarioDto.contraseña) {
       updateUsuarioDto.contraseña = await bcrypt.hash(updateUsuarioDto.contraseña, 10);
     }
-    
+
     Object.assign(usuarioToUpdate, updateUsuarioDto);
-    
+
     return this.usuarioRepository.save(usuarioToUpdate);
   }
 

@@ -3,6 +3,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from 
 import { ProductosService } from './productos.service';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
+import { AddProveedorDto } from './dto/add-proveedor.dto';
 
 @Controller('productos')
 export class ProductosController {
@@ -31,5 +32,13 @@ export class ProductosController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.productosService.remove(id);
+  }
+
+  @Post(':id/proveedores')
+  addProveedor(
+    @Param('id', ParseIntPipe) productoId: number,
+    @Body() addProveedorDto: AddProveedorDto,
+  ) {
+    return this.productosService.addProveedorToProducto(productoId, addProveedorDto);
   }
 }
