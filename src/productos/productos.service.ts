@@ -81,4 +81,17 @@ export class ProductosService {
     // 3. Guardar la relación en la base de datos
     return this.productoProveedorRepository.save(nuevaRelacion);
   }
+
+  async findProveedoresByProductoId(productoId: number) {
+    // Primero, verificamos que el producto principal exista.
+    await this.findOne(productoId);
+
+    // Luego, buscamos en la tabla intermedia y traemos la info del proveedor.
+    return this.productoProveedorRepository.find({
+      where: { productoId: productoId },
+      relations: {
+        proveedor: true, // Carga la entidad completa del Proveedor
+      },
+    });
+  }
 }

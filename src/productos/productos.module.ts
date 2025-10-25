@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductosService } from './productos.service';
 import { ProductosController } from './productos.controller';
 import { Producto } from './entities/producto.entity';
-import { ProductoRepository } from './repository/producto.repository.interface';
+import { ProductoRepository } from './repository/producto.repository';
 import { MarcasModule } from '../marcas/marcas.module';
 import { LineasModule } from '../lineas/lineas.module';
 import { ProductoProveedor } from './entities/producto-proveedor.entity';

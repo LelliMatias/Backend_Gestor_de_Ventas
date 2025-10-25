@@ -41,4 +41,9 @@ export class ProductosController {
   ) {
     return this.productosService.addProveedorToProducto(productoId, addProveedorDto);
   }
+
+  @Get(':id/proveedores')
+  findProveedoresByProducto(@Param('id', ParseIntPipe) productoId: number) {
+    return this.productosService.findProveedoresByProductoId(productoId);
+  }
 }
