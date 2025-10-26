@@ -26,8 +26,6 @@ export class VentaService {
   ) {}
 
   async create(createVentaDto: CreateVentaDto, usuarioPayload: any) {
-    // ... (Tu lógica de creación transaccional va aquí, sin cambios) ...
-    // ... (la dejo como la tenías) ...
     if (!usuarioPayload || !usuarioPayload.sub) {
         throw new BadRequestException('Payload de JWT inválido o no se encontró "sub" (ID de usuario).');
     }

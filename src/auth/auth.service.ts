@@ -21,44 +21,57 @@ export class AuthService {
             throw new BadRequestException('User already exists');
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(registerDto.contraseña, salt);
+        // --- INICIO DE LA MODIFICACIÓN ---
+
+        // NO hasheamos la contraseña aquí.
+        // const salt = await bcrypt.genSalt(10);
+        // const hashedPassword = await bcrypt.hash(registerDto.contraseña, salt);
 
         const createUsuarioDto: CreateUsuarioDto = {
             nombre: registerDto.nombre,
             email: registerDto.email,
-            contraseña: hashedPassword,
-            rol: RolUsuario.VENDEDOR // Forzamos el rol
+            contraseña: registerDto.contraseña, // <--- Pasa la contraseña en texto plano
+            rol: RolUsuario.VENDEDOR 
         };
 
-        return await this.usuarioService.create(createUsuarioDto);
-    }
+        // --- FIN DE LA MODIFICACIÓN ---
 
+        // Ahora, 'usuarioService.create' (que asumo que SÍ hashea)
+        // recibirá '123456', lo hasheará 1 sola vez y lo guardará.
+        return await this.usuarioService.create(createUsuarioDto);
+    }    // auth.service.ts
 
     async login(loginDto: LoginDto) {
         const user = await this.usuarioService.findOneByEmail(loginDto.email);
+        
+        // --- FLAG 1 (Usuario no existe) ---
         if (!user) {
-            throw new UnauthorizedException('Email is incorrect');
+            // Este es el mensaje que enviaremos al frontend
+            throw new UnauthorizedException('Usuario no encontrado con ese email');
         }
 
-        // Valido la contraseña
         const isPasswordValid = await bcrypt.compare(loginDto.contraseña, user.contraseña);
+
+        // --- FLAG 2 (Contraseña no coincide) ---
         if (!isPasswordValid) {
-            throw new UnauthorizedException('password is incorrect');
+            // Este es el otro mensaje
+            throw new UnauthorizedException('Contraseña incorrecta');
         }
 
+        // ... (El resto de tu lógica de login sigue igual) ...
         const payload = {
             sub: user.id_usuario,
             email: user.email,
             rol: user.rol
         }
+        const token = await this.jwtService.signAsync(payload);
 
-        const token = await this.jwtService.signAsync(payload); // Firma el token
-
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { contraseña, ...userWithoutPassword } = user;
 
         return {
-            message: "Login Successful",
-            access_token: token
+            access_token: token,
+            user: userWithoutPassword
         };
     }
 
