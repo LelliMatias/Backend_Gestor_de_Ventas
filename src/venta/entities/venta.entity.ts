@@ -37,4 +37,7 @@ export class Venta {
         nullable: true
     })
     fecha_eliminacion?: Date;
+
+    @CreateDateColumn({ name: 'fecha_creacion' }) // <-- Columna en la DB
+    fecha_creacion: Date; // <-- Propiedad en la clase   
 }

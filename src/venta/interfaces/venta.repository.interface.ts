@@ -1,7 +1,7 @@
 import { Venta } from "../entities/venta.entity";
 import { CreateVentaDto } from "../dto/create-venta.dto";
 import { UpdateVentaDto } from "../dto/update-venta.dto";
-import { FindOneOptions } from "typeorm";
+import { FindOneOptions, FindManyOptions } from "typeorm";
 
 export interface IVentaRepository{
     findAll(): Promise<Venta[]>;
@@ -16,4 +16,5 @@ export interface IVentaRepository{
     findOne(options: FindOneOptions<Venta>): Promise<Venta | null>;
     softDelete(id: number): Promise<void>;
     restore(id: number): Promise<void>;
+    find(options: FindManyOptions<Venta>): Promise<Venta[]>;
 }

@@ -2,7 +2,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 // --- Asegúrate de importar FindOneOptions ---
-import { FindOneOptions, Repository } from "typeorm";
+import { FindOneOptions, FindManyOptions, Repository } from "typeorm";
 import { IVentaRepository } from "../interfaces/venta.repository.interface";
 import { Venta } from "../entities/venta.entity";
 import { CreateVentaDto } from "../dto/create-venta.dto";
@@ -21,6 +21,10 @@ export class VentaRepository implements IVentaRepository {
 
     findById(id: number): Promise<Venta | null> {
         return this.typeormRepository.findOne({ where: { id_venta: id }, relations: ['usuario', 'detalles', 'detalles.producto'] });
+    }
+
+    find(options: FindManyOptions<Venta>): Promise<Venta[]> {
+        return this.typeormRepository.find(options);
     }
 
     create(CreateVentaDto: CreateVentaDto): Promise<Venta> {
