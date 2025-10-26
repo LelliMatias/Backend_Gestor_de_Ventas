@@ -32,4 +32,9 @@ export class LineasController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.lineasService.remove(id);
   }
+
+  @Post(':id/restore')
+  restore(@Param('id', ParseIntPipe) id: number) {
+    return this.lineasService.restore(id);
+  }
 }

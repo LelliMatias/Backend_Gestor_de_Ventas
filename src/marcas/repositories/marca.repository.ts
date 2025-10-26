@@ -1,7 +1,8 @@
 // src/marcas/repositories/marca.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+// Añadido FindOneOptions
+import { Repository, FindOneOptions } from 'typeorm';
 import { Marca } from '../entities/marca.entity';
 import { IMarcaRepository } from '../interfaces/marca.repository.interface';
 
@@ -36,5 +37,19 @@ export class MarcaRepository implements IMarcaRepository {
 
     async delete(id: number): Promise<void> {
         await this.typeormRepository.delete(id);
+    }
+
+    // --- MÉTODOS AÑADIDOS ---
+
+    findOne(options: FindOneOptions<Marca>): Promise<Marca | null> {
+        return this.typeormRepository.findOne(options);
+    }
+
+    async softDelete(id: number): Promise<void> {
+        await this.typeormRepository.softDelete(id);
+    }
+
+    async restore(id: number): Promise<void> {
+        await this.typeormRepository.restore(id);
     }
 }

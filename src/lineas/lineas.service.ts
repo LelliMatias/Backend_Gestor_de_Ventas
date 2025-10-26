@@ -17,14 +17,20 @@ export class LineasService {
     // 1. Verificamos que la marca exista. Si no, MarcasService lanzará un NotFoundException.
     await this.marcasService.findOne(createLineaDto.id_marca);
 
-    // 2. Verificamos si ya existe una línea con el mismo nombre para esa marca.
-    const lineaExistente = await this.lineaRepository.findByNameAndMarca(createLineaDto.nombre, createLineaDto.id_marca);
-    if (lineaExistente) {
-      throw new ConflictException(`Ya existe una línea con el nombre "${createLineaDto.nombre}" para esta marca.`);
-    }
+    const lineaExistente = await this.lineaRepository.findOne({
+      where: {
+        nombre: createLineaDto.nombre,
+        marca: { id: createLineaDto.id_marca } // Asumiendo repo estándar de TypeORM
+      },
+      withDeleted: true, // ¡Importante!
+    });
 
-    return this.lineaRepository.create(createLineaDto);
+  if (lineaExistente) {
+    throw new ConflictException(`Ya existe una línea con el nombre "${createLineaDto.nombre}" para esta marca (puede estar "borrada").`);
   }
+
+  return this.lineaRepository.create(createLineaDto);
+}
 
   findAll() {
     return this.lineaRepository.findAll();
@@ -49,6 +55,33 @@ export class LineasService {
 
   async remove(id: number) {
     await this.findOne(id);
-    return this.lineaRepository.delete(id);
+    await this.lineaRepository.softDelete(id);
   }
+
+  async restore(id: number) {
+    const linea = await this.lineaRepository.findOne({ 
+     where: { id }, 
+     withDeleted: true,
+     relations: ['marca'] // Cargar la marca para la validación
+   });
+   if (!linea) {
+     throw new NotFoundException(`Línea con ID #${id} no encontrada (incluso borrada)`);
+   }
+   if (!linea.fecha_eliminacion) {
+     throw new ConflictException(`La línea con ID #${id} no está borrada.`);
+   }
+
+   // Validar conflicto antes de restaurar
+   const conflicto = await this.lineaRepository.findOne({
+     where: { 
+       nombre: linea.nombre,
+       marca: { id: linea.marca.id }
+     } // Busca solo activos
+   });
+   if (conflicto) {
+     throw new ConflictException(`No se puede restaurar. Ya existe una línea activa con ese nombre para esa marca.`);
+   }
+
+   await this.lineaRepository.restore(id);
+ }
 }

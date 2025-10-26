@@ -46,4 +46,9 @@ export class ProductosController {
   findProveedoresByProducto(@Param('id', ParseIntPipe) productoId: number) {
     return this.productosService.findProveedoresByProductoId(productoId);
   }
+
+  @Post(':id/restore')
+  restore(@Param('id', ParseIntPipe) id: number) {
+    return this.productosService.restore(id);
+  }
 }

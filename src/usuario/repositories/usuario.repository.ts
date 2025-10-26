@@ -1,7 +1,8 @@
-// src/marcas/repositories/marca.repository.ts
+// src/usuario/repositories/usuario.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+// Añadido FindOneOptions
+import { Repository, FindOneOptions } from 'typeorm';
 import { Usuario } from '../entities/usuario.entity';
 import { IUsuarioRepository } from '../interfaces/usuario.repository.interface';
 import { CreateUsuarioDto } from '../dto/create-usuario.dto';
@@ -37,5 +38,17 @@ export class UsuarioRepository implements IUsuarioRepository {
     async delete(id: number): Promise<void> {
         await this.typeormRepository.delete(id);
     }
+
+
+    findOne(options: FindOneOptions<Usuario>): Promise<Usuario | null> {
+        return this.typeormRepository.findOne(options);
+    }
+
+    async softDelete(id: number): Promise<void> {
+        await this.typeormRepository.softDelete(id);
+    }
+
+    async restore(id: number): Promise<void> {
+        await this.typeormRepository.restore(id);
+    }
 }
-    

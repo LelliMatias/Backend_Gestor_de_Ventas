@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, ParseIntPipe } from '@nestjs/common';
 import { VentaService } from './venta.service';
 import { CreateVentaDto } from './dto/create-venta.dto';
 import { UpdateVentaDto } from './dto/update-venta.dto';
@@ -34,4 +34,9 @@ export class VentaController {
   remove(@Param('id') id: string) {
     return this.ventaService.remove(+id);
   }
+
+  @Post(':id/restore')
+    restore(@Param('id', ParseIntPipe) id: number) {
+      return this.ventaService.restore(id);
+    }
 }

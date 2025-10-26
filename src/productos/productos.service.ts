@@ -1,5 +1,5 @@
 // src/productos/productos.service.ts
-import { Inject, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { LineasService } from '../lineas/lineas.service';
 import { MarcasService } from '../marcas/marcas.service';
 import { CreateProductoDto } from './dto/create-producto.dto';
@@ -61,7 +61,7 @@ export class ProductosService {
 
   async remove(id: number) {
     await this.findOne(id);
-    return this.productoRepository.delete(id);
+    await this.productoRepository.softDelete(id);
   }
 
   async addProveedorToProducto(productoId: number, addProveedorDto: AddProveedorDto) {
@@ -94,4 +94,23 @@ export class ProductosService {
       },
     });
   }
+
+  async restore(id: number) {
+    const producto = await this.productoRepository.findOne({ 
+     where: { id }, 
+     withDeleted: true 
+   });
+    if (!producto) {
+     throw new NotFoundException(`Producto con ID #${id} no encontrado (incluso borrado)`);
+   }
+    if (!producto.fecha_eliminacion) {
+     throw new ConflictException(`El producto con ID #${id} no está borrado.`);
+   }
+   
+   // (Aquí podrías validar si la marca o línea del producto a restaurar
+   //  siguen existiendo y no están borradas)
+
+   await this.productoRepository.restore(id);
+ }
+
 }

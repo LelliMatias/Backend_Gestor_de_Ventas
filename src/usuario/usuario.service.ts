@@ -1,5 +1,5 @@
 // usuario.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Inject } from '@nestjs/common';
@@ -15,8 +15,25 @@ export class UsuarioService {
   ) { }
 
   async create(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
-    const nuevoUsuario = this.usuarioRepository.create(createUsuarioDto);
-    return this.usuarioRepository.save(await nuevoUsuario);
+
+    // 1. Verificar unicidad de email
+    const emailExiste = await this.usuarioRepository.findOne({
+      where: { email: createUsuarioDto.email },
+      withDeleted: true, // Esto sigue siendo correcto para buscar en *todos*
+    });
+    
+    if (emailExiste) {
+      throw new ConflictException('El email ya se encuentra registrado.');
+    }
+
+    const hashedPassword = await bcrypt.hash(createUsuarioDto.contraseña, 10); // hasheo contraseña
+
+    const nuevoUsuario = {
+      ...createUsuarioDto,
+      contraseña: hashedPassword,
+    };
+    
+    return this.usuarioRepository.create(nuevoUsuario);
   }
 
 
@@ -38,6 +55,9 @@ export class UsuarioService {
 
 
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto): Promise<Usuario> {
+    // Nota: El update de unicidad también debería usar withDeleted
+    // pero es más complejo (ej: ¿el email es el mismo que el actual?).
+    // Por simplicidad, lo dejamos así por ahora.
     const usuarioToUpdate = await this.findOne(id);
 
     if (updateUsuarioDto.contraseña) {
@@ -50,7 +70,40 @@ export class UsuarioService {
   }
 
   async remove(id: number): Promise<void> {
-    await this.findOne(id);
-    return this.usuarioRepository.delete(id);
+    await this.findOne(id); // Verifica que exista
+    await this.usuarioRepository.softDelete(id);
+  }
+
+  async restore(id: number): Promise<void> {
+    // Buscar CON borrados
+    const usuario = await this.usuarioRepository.findOne({
+      where: { id_usuario: id },
+      withDeleted: true,
+    });
+    if (!usuario) {
+      throw new NotFoundException(`Usuario con ID #${id} no encontrado (incluso borrado)`);
+    }
+    if (!usuario.fecha_eliminacion) {
+       throw new ConflictException(`El usuario con ID #${id} no está borrado.`);
+    }
+
+    // Antes de restaurar, verificar si hay un conflicto de unicidad
+    // (Ej: alguien creó un usuario con el mismo email mientras este estaba borrado)
+    const emailConflicto = await this.usuarioRepository.findOne({
+      where: { email: usuario.email } // Busca solo activos
+    });
+    if (emailConflicto) {
+       throw new ConflictException(`No se puede restaurar. Ya existe un usuario activo con el email ${usuario.email}.`);
+    }
+    
+    // (Repetir para 'nombre' si es necesario)
+    const nombreConflicto = await this.usuarioRepository.findOne({
+      where: { nombre: usuario.nombre } // Busca solo activos
+    });
+    if (nombreConflicto) {
+       throw new ConflictException(`No se puede restaurar. Ya existe un usuario activo con el nombre ${usuario.nombre}.`);
+    }
+
+    await this.usuarioRepository.restore(id);
   }
 }

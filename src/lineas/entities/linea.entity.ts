@@ -1,6 +1,6 @@
 // src/lineas/entities/linea.entity.ts
 import { Marca } from '../../marcas/entities/marca.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Unique, DeleteDateColumn } from 'typeorm';
 
 @Entity({ name: 'Linea' })
 
@@ -19,4 +19,11 @@ export class Linea {
     @ManyToOne(() => Marca, { nullable: false })
     @JoinColumn({ name: 'id_marca' })
     marca: Marca;
+
+    @DeleteDateColumn({
+        name: 'fecha_eliminacion',
+        type: 'timestamp',
+        nullable: true
+    })
+    fecha_eliminacion?: Date;
 }

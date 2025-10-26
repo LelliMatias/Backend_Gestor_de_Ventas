@@ -1,7 +1,8 @@
 // src/lineas/repositories/linea.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+// Añadido FindOneOptions
+import { Repository, FindOneOptions } from 'typeorm';
 import { CreateLineaDto } from '../dto/create-linea.dto';
 import { UpdateLineaDto } from '../dto/update-linea.dto';
 import { Linea } from '../entities/linea.entity';
@@ -14,7 +15,6 @@ export class LineaRepository implements ILineaRepository {
         private readonly typeormRepository: Repository<Linea>,
     ) { }
 
-    // Para que al buscar las líneas, también nos traiga la información de la marca asociada
     findAll(): Promise<Linea[]> {
         return this.typeormRepository.find({ relations: ['marca'] });
     }
@@ -30,7 +30,7 @@ export class LineaRepository implements ILineaRepository {
     async create(createLineaDto: CreateLineaDto): Promise<Linea> {
         const nuevaLinea = this.typeormRepository.create({
             ...createLineaDto,
-            marca: { id: createLineaDto.id_marca }, // Así se asigna la relación por ID
+            marca: { id: createLineaDto.id_marca }, 
         });
         return this.typeormRepository.save(nuevaLinea);
     }
@@ -50,5 +50,19 @@ export class LineaRepository implements ILineaRepository {
 
     async delete(id: number): Promise<void> {
         await this.typeormRepository.delete(id);
+    }
+
+    // --- MÉTODOS AÑADIDOS ---
+
+    findOne(options: FindOneOptions<Linea>): Promise<Linea | null> {
+        return this.typeormRepository.findOne(options);
+    }
+
+    async softDelete(id: number): Promise<void> {
+        await this.typeormRepository.softDelete(id);
+    }
+
+    async restore(id: number): Promise<void> {
+        await this.typeormRepository.restore(id);
     }
 }

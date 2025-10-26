@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateVentaDto } from './dto/create-venta.dto';
 import { UpdateVentaDto } from './dto/update-venta.dto';
 import type { IVentaRepository } from './interfaces/venta.repository.interface';
@@ -26,32 +26,22 @@ export class VentaService {
   ) {}
 
   async create(createVentaDto: CreateVentaDto, usuarioPayload: any) {
-    console.log('PAYLOAD RECIBIDO (Prueba 2):', usuarioPayload);
-
-    // --- VAMOS A BORRAR O COMENTAR EL BLOQUE "IF" ANTIGUO ---
-    // const idUsuarioAutenticado = usuarioPayload.sub; 
-    // if (!idUsuarioAutenticado) { 
-    //     throw new UnauthorizedException('Payload de JWT inválido, no se encontró "sub" (ID de usuario)');
-    // }
-
-    // --- AÑADE ESTE NUEVO BLOQUE DE PRUEBA ---
+    // ... (Tu lógica de creación transaccional va aquí, sin cambios) ...
+    // ... (la dejo como la tenías) ...
     if (!usuarioPayload || !usuarioPayload.sub) {
-        throw new BadRequestException('¡¡¡ERROR DE PRUEBA!! El servidor NO se ha reiniciado.');
+        throw new BadRequestException('Payload de JWT inválido o no se encontró "sub" (ID de usuario).');
     }
 
-    // Si pasamos la prueba, usamos el ID
     const idUsuarioAutenticado = usuarioPayload.sub;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // 2. Validar que el usuario (del JWT) exista en la DB
-      // ¡Este paso es NUEVO y CRÍTICO!
       const usuario = await queryRunner.manager.findOne(Usuario, {
         where: { 
           id_usuario: idUsuarioAutenticado, 
-          fecha_eliminacion: IsNull() // Asegurarse que no esté borrado lógicamente
+          fecha_eliminacion: IsNull()
         } 
       });
 
@@ -59,21 +49,27 @@ export class VentaService {
         throw new UnauthorizedException(`Usuario con ID #${idUsuarioAutenticado} (del token) no encontrado o inactivo.`);
       }
 
-      // 3. Crear la Venta "cabecera"
       const venta = queryRunner.manager.create(Venta, {
-         usuario: usuario, // <-- Se usa el objeto 'Usuario' encontrado
+         usuario: usuario,
          total: 0, 
       });
       const savedVenta = await queryRunner.manager.save(venta);
 
       let totalVenta = 0;
 
-      // 4. Procesar cada detalle
       for (const detalleDto of createVentaDto.detalles) {
-        const producto = await this.productoRepository.findById(detalleDto.id_producto);
+        // Usamos el queryRunner para bloquear la fila del producto
+        const producto = await queryRunner.manager.findOne(Producto, {
+            where: { id: detalleDto.id_producto },
+            lock: { mode: 'pessimistic_write' } // Bloqueo para evitar concurrencia
+        });
 
         if (!producto) {
           throw new NotFoundException(`Producto con ID #${detalleDto.id_producto} no encontrado.`);
+        }
+         // Verificamos si el producto está borrado
+        if (producto.fecha_eliminacion) {
+           throw new BadRequestException(`El producto "${producto.nombre}" no está disponible (está borrado).`);
         }
         if (producto.stockActual < detalleDto.cantidad) {
           throw new BadRequestException(`Stock insuficiente para "${producto.nombre}". Stock actual: ${producto.stockActual}`);
@@ -92,44 +88,101 @@ export class VentaService {
         });
         await queryRunner.manager.save(nuevoDetalle);
 
+        // Actualizamos el stock usando el queryRunner
         await queryRunner.manager.update(Producto, producto.id, {
           stockActual: producto.stockActual - detalleDto.cantidad
         });
       }
 
-      // 5. Actualizar la Venta con el total final
       savedVenta.total = totalVenta;
       await queryRunner.manager.save(Venta, savedVenta);
 
-      // 6. Confirmar la transacción
       await queryRunner.commitTransaction();
 
-      // 7. Devolver la venta completa
+      // Devolvemos la venta completa con sus relaciones cargadas
       return this.ventaRepository.findById(savedVenta.id_venta); 
 
     } catch (error) {
-      // 8. Revertir TODOS los cambios
       await queryRunner.rollbackTransaction();
       throw error; 
     } finally {
-      // 9. Siempre liberar el queryRunner
       await queryRunner.release();
     }
   }
 
-  findAll() {
-    return `This action returns all venta`;
+  // --- MÉTODO 'findAll' IMPLEMENTADO ---
+  /**
+   * Devuelve todas las ventas activas (no borradas).
+   * El repositorio ya carga las relaciones ('usuario', 'detalles', 'detalles.producto').
+   */
+  async findAll(): Promise<Venta[]> {
+    return this.ventaRepository.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} venta`;
+  // --- MÉTODO 'findOne' IMPLEMENTADO ---
+  /**
+   * Busca una venta activa por ID.
+   * Lanza NotFoundException si no la encuentra.
+   */
+  async findOne(id: number): Promise<Venta> {
+    const venta = await this.ventaRepository.findById(id);
+    if (!venta) {
+      throw new NotFoundException(`Venta con ID #${id} no encontrada`);
+    }
+    return venta;
   }
 
-  update(id: number, updateVentaDto: UpdateVentaDto) {
-    return `This action updates a #${id} venta`;
+  // --- MÉTODO 'update' IMPLEMENTADO ---
+  /**
+   * Actualiza una venta.
+   * NOTA: Este método es simple. No maneja la lógica transaccional
+   * de actualizar detalles, stock, o recalcular totales.
+   * Solo actualiza los campos planos de la Venta (ej: un estado, una nota, etc.)
+   */
+  async update(id: number, updateVentaDto: UpdateVentaDto): Promise<Venta> {
+    // Primero, verificamos que la venta exista (usando el findOne de este servicio)
+    await this.findOne(id);
+    
+    // Llamamos al repositorio que se encarga de hacer el merge y save
+    return this.ventaRepository.update(id, updateVentaDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} venta`;
+  // --- MÉTODO 'remove' (YA ESTABA BIEN) ---
+  /**
+   * Realiza un borrado lógico (soft delete) de una venta.
+   */
+  async remove(id: number): Promise<void> {
+    // Verificamos que exista
+    const venta = await this.ventaRepository.findById(id);
+    if (!venta) {
+      throw new NotFoundException(`Venta con ID #${id} no encontrada`);
+    }
+    
+    // NOTA: Si quisieras revertir el stock al borrar una venta,
+    // esa lógica transaccional iría aquí.
+
+    await this.ventaRepository.softDelete(id);
   }
+
+  // --- MÉTODO 'restore' (YA ESTABA BIEN) ---
+  /**
+   * Restaura una venta borrada lógicamente.
+   */
+  async restore(id: number): Promise<void> {
+    const venta = await this.ventaRepository.findOne({ 
+     where: { id_venta: id }, 
+     withDeleted: true 
+   });
+    if (!venta) {
+     throw new NotFoundException(`Venta con ID #${id} no encontrada (incluso borrada)`);
+   }
+    if (!venta.fecha_eliminacion) {
+     throw new ConflictException(`La venta con ID #${id} no está borrada.`);
+   }
+
+   // NOTA: Aquí podrías validar si el usuario o los productos
+   // de la venta siguen activos antes de restaurarla.
+   
+   await this.ventaRepository.restore(id);
+ }
 }

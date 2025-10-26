@@ -18,14 +18,14 @@ export class UsuarioController {
     return this.usuarioService.findAll();
   }
 
+  @Get('email/:email') 
+  findOneByEmail(@Param('email') email: string) {
+    return this.usuarioService.findOneByEmail(email);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.usuarioService.findOne(id);
-  }
-
-  @Get(':email')
-  findOneByEmail(@Param('email') email: string) {
-    return this.usuarioService.findOneByEmail(email);
   }
 
   @Patch(':id')
@@ -37,5 +37,10 @@ export class UsuarioController {
   @HttpCode(HttpStatus.NO_CONTENT) // Devuelve un código 204 que indica éxito sin contenido
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usuarioService.remove(id);
+  }
+
+  @Post(':id/restore')
+  restore(@Param('id', ParseIntPipe) id: number) {
+    return this.usuarioService.restore(id);
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOneOptions } from 'typeorm';
 import { CreateProductoDto } from '../dto/create-producto.dto';
 import { UpdateProductoDto } from '../dto/update-producto.dto';
 import { Producto } from '../entities/producto.entity';
@@ -71,5 +71,16 @@ export class ProductoRepository implements IProductoRepository {
 
     async save(producto: Producto): Promise<Producto> {
         return this.typeormRepository.save(producto);
+    }
+    findOne(options: FindOneOptions<Producto>): Promise<Producto | null> {
+            return this.typeormRepository.findOne(options);
+    }
+    
+    async softDelete(id: number): Promise<void> {
+            await this.typeormRepository.softDelete(id);
+        }
+    
+    async restore(id: number): Promise<void> {
+            await this.typeormRepository.restore(id);
     }
 }
