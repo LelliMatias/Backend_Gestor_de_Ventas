@@ -1,10 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ProveedoresService } from './proveedores.service';
 import { CreateProveedorDto } from './dto/create-proveedor.dto';
 import { UpdateProveedorDto } from './dto/update-proveedor.dto';
-// import { UpdateProveedorDto } from './dto/update-proveedor.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorators';
+import { RolUsuario } from 'src/usuario/entities/usuario.entity';
 
 @Controller('proveedores')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(RolUsuario.ADMIN)
 export class ProveedoresController {
   constructor(private readonly proveedoresService: ProveedoresService) { }
 

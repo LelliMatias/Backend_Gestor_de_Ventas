@@ -1,10 +1,16 @@
 // src/lineas/lineas.controller.ts
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { LineasService } from './lineas.service';
 import { CreateLineaDto } from './dto/create-linea.dto';
 import { UpdateLineaDto } from './dto/update-linea.dto';
+import { RolUsuario } from 'src/usuario/entities/usuario.entity';
+import { Roles } from 'src/auth/decorators/roles.decorators';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('lineas')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(RolUsuario.ADMIN)
 export class LineasController {
   constructor(private readonly lineasService: LineasService) { }
 

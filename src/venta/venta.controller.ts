@@ -2,7 +2,6 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Pars
 import { VentaService } from './venta.service';
 import { CreateVentaDto } from './dto/create-venta.dto';
 import { UpdateVentaDto } from './dto/update-venta.dto';
-import { AuthGuard } from '../auth/guards/jwt-auth.guard';
 import express from 'express';
 import { UpdateVentaDetallesDto } from './dto/update-detalle-venta.dto';
 import { HistorialVentaService } from 'src/historial_venta/historial_venta.service';

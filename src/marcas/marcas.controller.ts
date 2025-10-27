@@ -1,10 +1,16 @@
 // src/marcas/marcas.controller.ts
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { MarcasService } from './marcas.service';
 import { CreateMarcaDto } from './dto/create-marca.dto';
 import { UpdateMarcaDto } from './dto/update-marca.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorators';
+import { RolUsuario } from 'src/usuario/entities/usuario.entity';
 
 @Controller('marcas')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(RolUsuario.ADMIN)
 export class MarcasController {
   constructor(private readonly marcasService: MarcasService) { }
 

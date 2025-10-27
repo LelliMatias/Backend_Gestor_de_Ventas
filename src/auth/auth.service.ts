@@ -4,7 +4,6 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { AuthGuard } from './guards/jwt-auth.guard';
 import { CreateUsuarioDto } from 'src/usuario/dto/create-usuario.dto';
 import { RolUsuario } from 'src/usuario/entities/usuario.entity';
 
@@ -31,7 +30,7 @@ export class AuthService {
             nombre: registerDto.nombre,
             email: registerDto.email,
             contraseña: registerDto.contraseña, // <--- Pasa la contraseña en texto plano
-            rol: RolUsuario.VENDEDOR 
+            rol: RolUsuario.VENDEDOR
         };
 
         // --- FIN DE LA MODIFICACIÓN ---
@@ -43,7 +42,7 @@ export class AuthService {
 
     async login(loginDto: LoginDto) {
         const user = await this.usuarioService.findOneByEmail(loginDto.email);
-        
+
         // --- FLAG 1 (Usuario no existe) ---
         if (!user) {
             // Este es el mensaje que enviaremos al frontend
@@ -70,14 +69,9 @@ export class AuthService {
         const { contraseña, ...userWithoutPassword } = user;
 
         return {
-            access_token: token,
+            token: token,
             user: userWithoutPassword
         };
     }
 
-    @Get('validate')
-    @UseGuards(AuthGuard)
-    profile() {
-        return 'profile'
-    }
 }
