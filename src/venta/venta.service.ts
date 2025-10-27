@@ -32,11 +32,11 @@ export class VentaService {
     // Tu lógica de 'create' (con stock) se queda igual.
     // Solo añadimos la llamada al historial al final.
     
-    if (!usuarioPayload || !usuarioPayload.sub) {
-        throw new BadRequestException('Payload de JWT inválido.');
+    if (!usuarioPayload || !usuarioPayload.id_usuario) { 
+      throw new BadRequestException('Payload de JWT inválido o usuario no adjuntado.');
     }
 
-    const idUsuarioAutenticado = usuarioPayload.sub;
+    const idUsuarioAutenticado = usuarioPayload.id_usuario;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -150,9 +150,9 @@ export class VentaService {
    * NO devuelve stock (según tu requisito).
    */
   async remove(id: number, usuarioPayload: any): Promise<void> {
-    if (!usuarioPayload || !usuarioPayload.sub) {
-        throw new BadRequestException('Payload de JWT inválido');
-    }
+    if (!usuarioPayload || !usuarioPayload.id_usuario) {
+      throw new BadRequestException('Payload de JWT inválido');
+  }
     
     // Usamos el manager general (sin transacción)
     const manager = this.dataSource.manager;
@@ -163,8 +163,8 @@ export class VentaService {
     }
     
     const usuario = await manager.findOne(Usuario, { 
-        where: { id_usuario: usuarioPayload.sub, fecha_eliminacion: IsNull() } 
-    });
+      where: { id_usuario: usuarioPayload.id_usuario, fecha_eliminacion: IsNull() } 
+  });
     if (!usuario) {
         throw new UnauthorizedException(`Usuario no encontrado`);
     }
@@ -189,9 +189,9 @@ export class VentaService {
    * NO re-descuenta stock (según tu requisito).
    */
   async restore(id: number, usuarioPayload: any): Promise<void> {
-    if (!usuarioPayload || !usuarioPayload.sub) {
-        throw new BadRequestException('Payload de JWT inválido');
-    }
+    if (!usuarioPayload || !usuarioPayload.id_usuario) {
+      throw new BadRequestException('Payload de JWT inválido');
+  }
 
     const manager = this.dataSource.manager;
     
@@ -208,8 +208,8 @@ export class VentaService {
     }
 
     const usuario = await manager.findOne(Usuario, { 
-        where: { id_usuario: usuarioPayload.sub, fecha_eliminacion: IsNull() } 
-    });
+      where: { id_usuario: usuarioPayload.id_usuario, fecha_eliminacion: IsNull() } 
+  });
     if (!usuario) {
         throw new UnauthorizedException(`Usuario no encontrado`);
     }
@@ -239,7 +239,8 @@ export class VentaService {
     updateDto: UpdateVentaDetallesDto, 
     usuarioPayload: any
   ) {
-    if (!usuarioPayload || !usuarioPayload.sub) {
+    // --- CORRECCIÓN AQUÍ TAMBIÉN ---
+    if (!usuarioPayload || !usuarioPayload.id_usuario) {
         throw new BadRequestException('Payload de JWT inválido');
     }
     
@@ -250,7 +251,7 @@ export class VentaService {
     try {
       // 1. Obtener usuario y venta (con sus detalles ANTIGUOS)
       const usuario = await queryRunner.manager.findOne(Usuario, {
-        where: { id_usuario: usuarioPayload.sub, fecha_eliminacion: IsNull() }
+        where: { id_usuario: usuarioPayload.id_usuario, fecha_eliminacion: IsNull() }
       });
       if (!usuario) throw new UnauthorizedException('Usuario no autorizado');
 

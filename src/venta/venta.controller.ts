@@ -5,15 +5,19 @@ import { UpdateVentaDto } from './dto/update-venta.dto';
 import express from 'express';
 import { UpdateVentaDetallesDto } from './dto/update-detalle-venta.dto';
 import { HistorialVentaService } from 'src/historial_venta/historial_venta.service';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { AuthGuard } from '@nestjs/passport';
+
 
 @Controller('venta')
+@UseGuards(AuthGuard('jwt'))
 export class VentaController {
   constructor(
     private readonly ventaService: VentaService,
     private readonly historialService: HistorialVentaService
   ) { }
 
-  @Post()
+    @Post()
   create(@Body() createVentaDto: CreateVentaDto, @Req() req: express.Request) {
     const usuarioPayload = req['user'];
     return this.ventaService.create(createVentaDto, usuarioPayload);
