@@ -1,9 +1,10 @@
 // src/productos/productos.controller.ts
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Put } from '@nestjs/common';
 import { ProductosService } from './productos.service';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import { AddProveedorDto } from './dto/add-proveedor.dto';
+import { UpdateProveedoresDto } from './dto/update-proveedores.dto';
 
 @Controller('productos')
 export class ProductosController {
@@ -40,6 +41,19 @@ export class ProductosController {
     @Body() addProveedorDto: AddProveedorDto,
   ) {
     return this.productosService.addProveedorToProducto(productoId, addProveedorDto);
+  }
+
+  @Get(':id/proveedores')
+  findProveedoresByProducto(@Param('id', ParseIntPipe) productoId: number) {
+    return this.productosService.findProveedoresByProductoId(productoId);
+  }
+
+  @Put(':id/proveedores')
+  updateProveedores(
+    @Param('id', ParseIntPipe) productoId: number,
+    @Body() updateProveedoresDto: UpdateProveedoresDto,
+  ) {
+    return this.productosService.updateProveedoresForProducto(productoId, updateProveedoresDto);
   }
 
   @Get(':id/proveedores')

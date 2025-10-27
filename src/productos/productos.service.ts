@@ -1,15 +1,16 @@
 // src/productos/productos.service.ts
-import { Inject, Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { LineasService } from '../lineas/lineas.service';
 import { MarcasService } from '../marcas/marcas.service';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import type { IProductoRepository } from './interfaces/producto.repository.interface';
 import { ProductoProveedor } from './entities/producto-proveedor.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { AddProveedorDto } from './dto/add-proveedor.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProveedoresService } from 'src/proveedores/proveedores.service';
+import { UpdateProveedoresDto } from './dto/update-proveedores.dto';
 
 @Injectable()
 export class ProductosService {
@@ -19,6 +20,7 @@ export class ProductosService {
     private readonly marcasService: MarcasService,
     private readonly lineasService: LineasService,
     private readonly proveedoresService: ProveedoresService,
+    private dataSource: DataSource,
     @InjectRepository(ProductoProveedor)
     private readonly productoProveedorRepository: Repository<ProductoProveedor>
   ) { }
@@ -49,12 +51,23 @@ export class ProductosService {
   }
 
   async update(id: number, updateProductoDto: UpdateProductoDto) {
-    await this.findOne(id); // Verificamos que el producto exista
-    // Validaciones opcionales si se actualizan marca o línea
-    if (updateProductoDto.id_marca) await this.marcasService.findOne(updateProductoDto.id_marca);
-    if (updateProductoDto.id_linea) await this.lineasService.findOne(updateProductoDto.id_linea);
+    await this.findOne(id);
 
-    // (Opcional Avanzado) Se podría agregar una validación de consistencia como en el create.
+    const { id_marca, id_linea } = updateProductoDto;
+
+    if (id_marca) {
+      await this.marcasService.findOne(id_marca);
+    }
+    if (id_linea) {
+      await this.lineasService.findOne(id_linea);
+    }
+
+    if (id_marca && id_linea) {
+      const linea = await this.lineasService.findOne(id_linea);
+      if (linea.marca.id !== id_marca) {
+        throw new BadRequestException('La línea seleccionada no pertenece a la nueva marca especificada.');
+      }
+    }
 
     return this.productoRepository.update(id, updateProductoDto);
   }
@@ -96,21 +109,66 @@ export class ProductosService {
   }
 
   async restore(id: number) {
-    const producto = await this.productoRepository.findOne({ 
-     where: { id }, 
-     withDeleted: true 
-   });
+    const producto = await this.productoRepository.findOne({
+      where: { id },
+      withDeleted: true
+    });
     if (!producto) {
-     throw new NotFoundException(`Producto con ID #${id} no encontrado (incluso borrado)`);
-   }
+      throw new NotFoundException(`Producto con ID #${id} no encontrado (incluso borrado)`);
+    }
     if (!producto.fecha_eliminacion) {
-     throw new ConflictException(`El producto con ID #${id} no está borrado.`);
-   }
-   
-   // (Aquí podrías validar si la marca o línea del producto a restaurar
-   //  siguen existiendo y no están borradas)
+      throw new ConflictException(`El producto con ID #${id} no está borrado.`);
+    }
 
-   await this.productoRepository.restore(id);
- }
+    // (Aquí podrías validar si la marca o línea del producto a restaurar
+    //  siguen existiendo y no están borradas)
 
+    await this.productoRepository.restore(id);
+  }
+
+
+  async findProveedoresByProductoId(productoId: number) {
+    return this.productoProveedorRepository.find({
+      where: { productoId: productoId },
+      relations: ['proveedor'], // ¡Importante para obtener los detalles del proveedor!
+    });
+  }
+
+  async updateProveedoresForProducto(productoId: number, dto: UpdateProveedoresDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Borrar todas las asociaciones existentes para este producto
+      await queryRunner.manager.delete(ProductoProveedor, { productoId: productoId });
+
+      // 2. Crear las nuevas asociaciones a partir de los datos del DTO
+      const nuevasAsociaciones = dto.proveedores.map(p =>
+        queryRunner.manager.create(ProductoProveedor, {
+          productoId: productoId,
+          proveedorId: p.proveedorId,
+          precioCompra: p.precioCompra,
+          codigoProveedor: p.codigoProveedor,
+        })
+      );
+
+      // 3. Guardar todas las nuevas asociaciones
+      await queryRunner.manager.save(nuevasAsociaciones);
+
+      // 4. Confirmar la transacción
+      await queryRunner.commitTransaction();
+
+      // 5. Devolver las nuevas asociaciones creadas
+      return nuevasAsociaciones;
+
+    } catch (err) {
+      // Si algo falla, deshacer todos los cambios
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      // Liberar el query runner
+      await queryRunner.release();
+    }
+  }
 }
