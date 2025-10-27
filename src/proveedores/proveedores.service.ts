@@ -1,6 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { IProveedorRepository } from './interfaces/proveedor.repository.interface';
 import { CreateProveedorDto } from './dto/create-proveedor.dto';
+import { UpdateProveedorDto } from './dto/update-proveedor.dto';
 
 @Injectable()
 export class ProveedoresService {
@@ -24,5 +25,17 @@ export class ProveedoresService {
     }
     return proveedor;
   }
-  // ... métodos update y remove
+
+  async update(id: number, updateProveedorDto: UpdateProveedorDto) {
+    await this.findOne(id);
+    return this.proveedorRepository.update(id, updateProveedorDto);
+  }
+
+  async remove(id: number) {
+    await this.findOne(id);
+    await this.proveedorRepository.delete(id);
+  }
+
+
+
 }

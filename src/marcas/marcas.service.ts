@@ -38,15 +38,15 @@ export class MarcasService {
 
   async update(id: number, nombre: string) {
     await this.findOne(id);
-    
+
     // --- Verificación de unicidad en Update ---
-     const marcaExistente = await this.marcaRepository.findOne({
+    const marcaExistente = await this.marcaRepository.findOne({
       where: { nombre: nombre },
       withDeleted: true,
     });
     // Si existe Y NO es la misma marca que estoy editando
     if (marcaExistente && marcaExistente.id !== id) {
-       throw new ConflictException(`El nombre "${nombre}" ya está en uso por otra marca (puede estar "borrada").`);
+      throw new ConflictException(`El nombre "${nombre}" ya está en uso por otra marca (puede estar "borrada").`);
     }
     // --- Fin verificación ---
 
@@ -54,9 +54,9 @@ export class MarcasService {
   }
 
   async restore(id: number) {
-    const marca = await this.marcaRepository.findOne({ 
-      where: { id }, 
-      withDeleted: true 
+    const marca = await this.marcaRepository.findOne({
+      where: { id },
+      withDeleted: true
     });
     if (!marca) {
       throw new NotFoundException(`Marca con ID #${id} no encontrada (incluso borrada)`);
@@ -72,7 +72,7 @@ export class MarcasService {
     if (conflicto) {
       throw new ConflictException(`No se puede restaurar. Ya existe una marca activa con el nombre "${marca.nombre}".`);
     }
-    
+
     await this.marcaRepository.restore(id);
   }
 }

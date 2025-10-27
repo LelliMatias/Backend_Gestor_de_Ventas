@@ -16,7 +16,7 @@ export class Linea {
     descripcion: string;
 
 
-    @ManyToOne(() => Marca, { nullable: false })
+    @ManyToOne(() => Marca, { nullable: false, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'id_marca' })
     marca: Marca;
 

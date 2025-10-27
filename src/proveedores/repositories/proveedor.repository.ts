@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Proveedor } from '../entities/proveedor.entity';
 import { IProveedorRepository } from '../interfaces/proveedor.repository.interface';
 import { CreateProveedorDto } from '../dto/create-proveedor.dto';
-import { UpdateProveedoreDto } from '../dto/update-proveedor.dto';
+import { UpdateProveedorDto } from '../dto/update-proveedor.dto';
 
 @Injectable()
 export class ProveedorRepository implements IProveedorRepository {
@@ -26,7 +26,7 @@ export class ProveedorRepository implements IProveedorRepository {
         return this.typeormRepository.save(nuevaProveedor);
     }
 
-    async update(id: number, updateProveedorDto: UpdateProveedoreDto): Promise<Proveedor> {
+    async update(id: number, updateProveedorDto: UpdateProveedorDto): Promise<Proveedor> {
         await this.typeormRepository.update(id, updateProveedorDto);
         const updatedProveedor = await this.findById(id);
         if (!updatedProveedor) {
