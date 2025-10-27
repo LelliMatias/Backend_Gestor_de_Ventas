@@ -3,19 +3,16 @@ import { VentaService } from './venta.service';
 import { CreateVentaDto } from './dto/create-venta.dto';
 import { UpdateVentaDto } from './dto/update-venta.dto';
 import { AuthGuard } from '../auth/guards/jwt-auth.guard';
-// --- NUEVOS IMPORTS ---
 import express from 'express';
 import { UpdateVentaDetallesDto } from './dto/update-detalle-venta.dto';
 import { HistorialVentaService } from 'src/historial_venta/historial_venta.service';
 
 @Controller('venta')
-@UseGuards(AuthGuard)
 export class VentaController {
   constructor(
     private readonly ventaService: VentaService,
-    // --- NUEVA INYECCIÓN ---
     private readonly historialService: HistorialVentaService
-  ) {}
+  ) { }
 
   @Post()
   create(@Body() createVentaDto: CreateVentaDto, @Req() req: express.Request) {
@@ -56,7 +53,7 @@ export class VentaController {
   // --- NUEVO ENDPOINT (PARA MODIFICAR DETALLES) ---
   @Patch(':id/detalles')
   updateDetalles(
-    @Param('id', ParseIntPipe) id: number, 
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateVentaDetallesDto: UpdateVentaDetallesDto,
     @Req() req: express.Request // Necesitamos el usuario para el historial
   ) {

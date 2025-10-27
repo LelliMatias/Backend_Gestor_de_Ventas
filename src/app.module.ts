@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { VentaModule } from './venta/venta.module';
 import { DetalleVentaModule } from './detalle_venta/detalle_venta.module';
 import { ProveedoresModule } from './proveedores/proveedores.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ProveedoresModule } from './proveedores/proveedores.module';
     VentaModule,
     DetalleVentaModule,
     ProveedoresModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
